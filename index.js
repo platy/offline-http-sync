@@ -19,14 +19,23 @@ var fs = require('fs');
  * @param {httplinkCallback} callback
  */
 exports.httplink = function(srcUrl, destPath, callback) {
-  var file = fs.createWriteStream(destPath);
   http.get(srcUrl, function(response) {
-    console.log(response);
     if(response.statusCode >= 400)
-      return callback(new Error('HTTP response indicated failure to get resource: ' + response.statusCode), new Error('HTTP response indicated failure to get resource: ' + response.statusCode));
-    response.pipe(file);
-    response.on('end', callback);
+      return httpFailed(destPath, new Error('HTTP response indicated failure to get resource: ' + response.statusCode), callback);
+    var file = fs.createWriteStream(destPath);
+    file.on('open', function() {
+      response.pipe(file);
+      response.on('end', callback);
+    });
+    file.on('error', callback);
   }).on('error', function(err) {
-    callback(err, err)
+    httpFailed(destPath, err, callback);
   });
 };
+
+function httpFailed(destPath, downloadError, callback) {
+  fs.access(destPath, fs.R_OK, function(fileError) {
+    console.log('Access', destPath, fileError);
+      callback(fileError, downloadError);
+  });
+}

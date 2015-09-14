@@ -25,11 +25,12 @@ describe('httplink', function(){
   });
 
   describe('when there is no local file', function() {
+    const missingResourcePath = 'resourceMissing';
+
     afterEach('remove downloaded files', function(done) {
-      fs.unlink(missingResourcePath, done);
+      fs.unlink(missingResourcePath, function(){done()});
     });
 
-    const missingResourcePath = 'resourceMissing';
     it('it downloads the http file', function(done) {
       httplink('http://localhost:' + expressPort + '/resource200', missingResourcePath, function(accessError, downloadFailure) {
         var fileContents = fs.readFileSync(missingResourcePath);
@@ -42,7 +43,7 @@ describe('httplink', function(){
         if (accessError && downloadFailure)
           done();
         else
-          done(new Error("Error should be returned when can't connect to source and destination doesn't exist"));
+          done(new Error("Error should be returned when can't connect to source and destination doesn't exist. " + accessError + ' ' +  downloadFailure));
       });
     });
     it('fails if the http response is an error', function(done) {
@@ -50,13 +51,42 @@ describe('httplink', function(){
         if (accessError && downloadFailure)
           done();
         else
-          done(new Error("Errors should be returned when source produces an error response code and destination doesn't exist. " + accessError || downloadFailure));
+          done(new Error("Errors should be returned when source produces an error response code and destination doesn't exist. " + accessError + ' ' +  downloadFailure));
       });
     });
   });
   describe('when there is a local file', function(){
-    it('it overwrites the file with the one from http');
-    it('returns the error if the http connection fails');
-    it('returns the error if the download fails');
+    const existingResourcePath = 'resourceExisting';
+
+    beforeEach('create local file', function(done) {
+      fs.writeFile(existingResourcePath, 'existing resource data', done);
+    });
+    afterEach('remove potentially changed files', function(done) {
+      fs.unlink(existingResourcePath, done);
+    });
+
+    it('it overwrites the file with the one from http', function(done) {
+      httplink('http://localhost:' + expressPort + '/resource200', existingResourcePath, function(accessError, downloadFailure) {
+        var fileContents = fs.readFileSync(existingResourcePath);
+        expect(fileContents.equals(resourceBuffer)).to.equal(true);
+        done(accessError || downloadFailure);
+      });
+    });
+    it('returns the non-fatal error if the http connection fails', function(done) {
+      httplink('http://localhost:1', existingResourcePath, function(accessError, downloadFailure) {
+        expect(downloadFailure).to.exist;
+        var fileContents = fs.readFileSync(existingResourcePath);
+        expect(fileContents.toString()).to.equal('existing resource data');
+        done(accessError);
+      });
+    });
+    it('returns the error if the download fails', function(done) {
+      httplink('http://localhost:' + expressPort + '/resource404', existingResourcePath, function(accessError, downloadFailure) {
+        expect(downloadFailure).to.exist;
+        var fileContents = fs.readFileSync(existingResourcePath);
+        expect(fileContents.toString()).to.equal('existing resource data');
+        done(accessError);
+      });
+    });
   });
 });
