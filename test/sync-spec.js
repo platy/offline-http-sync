@@ -2,9 +2,9 @@ const expect = require('chai').expect;
 require('chai').should();
 const fs = require('fs');
 const express = require('express');
-const httplink = require('../index.js').httplink;
+const sync = require('../index.js').sync;
 
-describe('httplink', function(){
+describe('sync', function(){
   const resourceBuffer = new Buffer('some resource data\n');
   var expressPort;
 
@@ -32,14 +32,14 @@ describe('httplink', function(){
     });
 
     it('it downloads the http file', function(done) {
-      httplink('http://localhost:' + expressPort + '/resource200', missingResourcePath, function(accessError, downloadFailure) {
+      sync('http://localhost:' + expressPort + '/resource200', missingResourcePath, function(accessError, downloadFailure) {
         var fileContents = fs.readFileSync(missingResourcePath);
         expect(fileContents.equals(resourceBuffer)).to.equal(true);
         done(accessError || downloadFailure);
       });
     });
     it('fails if the http connection fails', function(done) {
-      httplink('http://localhost:1', missingResourcePath, function(accessError, downloadFailure) {
+      sync('http://localhost:1', missingResourcePath, function(accessError, downloadFailure) {
         if (accessError && downloadFailure)
           done();
         else
@@ -47,7 +47,7 @@ describe('httplink', function(){
       });
     });
     it('fails if the http response is an error', function(done) {
-      httplink('http://localhost:' + expressPort + '/resource404', missingResourcePath, function(accessError, downloadFailure) {
+      sync('http://localhost:' + expressPort + '/resource404', missingResourcePath, function(accessError, downloadFailure) {
         if (accessError && downloadFailure)
           done();
         else
@@ -66,14 +66,14 @@ describe('httplink', function(){
     });
 
     it('it overwrites the file with the one from http', function(done) {
-      httplink('http://localhost:' + expressPort + '/resource200', existingResourcePath, function(accessError, downloadFailure) {
+      sync('http://localhost:' + expressPort + '/resource200', existingResourcePath, function(accessError, downloadFailure) {
         var fileContents = fs.readFileSync(existingResourcePath);
         expect(fileContents.equals(resourceBuffer)).to.equal(true);
         done(accessError || downloadFailure);
       });
     });
     it('returns the non-fatal error if the http connection fails', function(done) {
-      httplink('http://localhost:1', existingResourcePath, function(accessError, downloadFailure) {
+      sync('http://localhost:1', existingResourcePath, function(accessError, downloadFailure) {
         expect(downloadFailure).to.exist;
         var fileContents = fs.readFileSync(existingResourcePath);
         expect(fileContents.toString()).to.equal('existing resource data');
@@ -81,7 +81,7 @@ describe('httplink', function(){
       });
     });
     it('returns the error if the download fails', function(done) {
-      httplink('http://localhost:' + expressPort + '/resource404', existingResourcePath, function(accessError, downloadFailure) {
+      sync('http://localhost:' + expressPort + '/resource404', existingResourcePath, function(accessError, downloadFailure) {
         expect(downloadFailure).to.exist;
         var fileContents = fs.readFileSync(existingResourcePath);
         expect(fileContents.toString()).to.equal('existing resource data');

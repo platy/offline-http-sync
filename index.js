@@ -4,10 +4,10 @@ var fs = require('fs');
 
 
 /**
- * This callback type is called once an asynchronous httplink completes. The first error is fatal, the other can be
+ * This callback type is called once an asynchronous sync completes. The first error is fatal, the other can be
  * ignored but you may want to trigger a warning.
  *
- * @callback httplinkCallback
+ * @callback syncCallback
  * @param {Error} cacheError probably a fatal error, this either means that either we couldn't write the downloaded file to the cache or that the download failed and we couldn't read from the cache. This could be some filesystem error or the download error
  * @param {Error} refreshError the resource failed to download, the file should be available at the cache unless there was also a cache Error. This may be the same as the cacheError.
  */
@@ -16,9 +16,9 @@ var fs = require('fs');
  *
  * @param srcUrl
  * @param destPath
- * @param {httplinkCallback} callback
+ * @param {syncCallback} callback
  */
-exports.httplink = function(srcUrl, destPath, callback) {
+exports.sync = function(srcUrl, destPath, callback) {
   http.get(srcUrl, function(response) {
     if(response.statusCode >= 400)
       return httpFailed(destPath, new Error('HTTP response indicated failure to get resource: ' + response.statusCode), callback);

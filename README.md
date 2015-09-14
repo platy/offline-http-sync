@@ -1,6 +1,6 @@
-# httplink
+# offline-http-sync
 
-httplink will download a file over http (if possible) and cache it locally where you specify. If the resource is not
+offline-http-sync will download a file over http (if possible) and cache it locally where you specify. If the resource is not
 available, it will load the file from the cache. This is for when the availability of a resource is more important that
 its consistency.
 
@@ -8,8 +8,8 @@ its consistency.
 
 Use symlink as api inspiration
 ```
-var sl = require('httplink');
-sl.httplink('http://www.example.com/resource', './resourcecache', function(err) {
+var sl = require('offline-http-sync');
+sl.synclink('http://www.example.com/resource', './resourcecache', function(err) {
 
 };
 var s = fs.readStream('./resourcecache');

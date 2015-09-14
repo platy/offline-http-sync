@@ -1,5 +1,5 @@
 {
-  "name": "httplink",
+  "name": "offline-http-sync",
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
