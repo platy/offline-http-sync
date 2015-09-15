@@ -21,4 +21,4 @@ var s = fs.readStream('./resourcecache');
 - (0.1) Periodically attempt to download updated resource in the background, replace the existing file and notify when it has been replaced
 - (0.2) Diff the files and only notify when the file changes
 - (0.3) Use http caching headers to reduce how resources are downloaded
-- (1.0) Well tested, api reviewed, feature complete - aka Done
+- (1.0) Well tested, api reviewed, feature complete, documented, name settled - aka Done
