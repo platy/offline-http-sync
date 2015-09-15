@@ -8,13 +8,24 @@ its consistency.
 
 ## Usage
 
-Use symlink as api inspiration
+Load some resource over http, saving to cache, or just from cache if http resource is not available.
 ```
 var sl = require('offline-http-sync');
-sl.sync('http://www.example.com/resource', './resourcecache', function(err) {
+var resourceLoader = sl.sync('http://www.example.com/resource', './resourcecache');
+resourceLoader.on('error', function(fileError, httpError) {
+  console.err(httpError, 'Resource needed for startup could not be retrieved);
+});
+resourceLoader.on('ready', function() {
+  var s = fs.readStream('./resourcecache');
+});
+```
 
-};
-var s = fs.readStream('./resourcecache');
+Update the cache at some point.
+```
+resourceLoader.update();
+resourceLoader.on('update', function() {
+  console.log('Resource updated');
+});
 ```
 
 ## Milestones
