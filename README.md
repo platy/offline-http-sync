@@ -19,9 +19,8 @@ var s = fs.readStream('./resourcecache');
 
 ## Milestones
 
-- (0.0) Download a file and store locally at startup
-- (0.1) Ability to request an update to the file (in the same process), replace the existing file and notify when it has been replaced
-- (0.2) Periodically attempt to download updated resource in the background with a good api
-- (0.3) Diff the files and only notify when the file changes
-- (0.4) Use http caching headers to reduce how resources are downloaded
+- (0.0) Download a file and store locally at startup, ability to request an update to the file (in the same process), replace the existing file and notify when it has been replaced
+- (0.1) Periodically attempt to download updated resource in the background with a good api
+- (0.2) Diff the files and only notify when the file changes
+- (0.3) Use http caching headers to reduce how resources are downloaded
 - (1.0) Well tested, api reviewed, feature complete, documented, name settled - aka Done
