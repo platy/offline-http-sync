@@ -4,7 +4,7 @@ const fs = require('fs');
 const express = require('express');
 const sync = require('../index.js').sync;
 
-describe('sync', function(){
+describe('initial sync', function(){
   const resourceBuffer = new Buffer('some resource data\n');
   var expressPort;
 
@@ -88,5 +88,47 @@ describe('sync', function(){
         done(accessError);
       });
     });
+  });
+});
+
+describe('updates after an initial successful sync', function(){
+  var resourceBuffer;
+  var expressPort;
+  var localResource = 'localresource.txt';
+
+  before('Start test http server', function(done){
+    const testApp = express();
+    testApp.get('/resource', function(req, res) {
+      res.send(new Buffer(resourceBuffer));
+    });
+    var server = testApp.listen();
+    server.on('listening', function() {
+      expressPort = server.address().port;
+      expressPort.should.exist;
+      done();
+    });
+  });
+
+  var watcher;
+
+  beforeEach('initial download', function(done) {
+    resourceBuffer = 'some resource data\n';
+    watcher = sync('http://localhost:' + expressPort + '/resource', localResource);
+    watcher.on('ready', done);
+    watcher.on('error', done);
+  });
+
+  afterEach('remove potentially changed files', function(done) {
+    fs.unlink(localResource, function(){done()});
+  });
+
+  it('does a second update', function(done) {
+    watcher.on('update', function() {
+      var fileContents = fs.readFileSync(localResource);
+      fileContents.toString().should.equal(resourceBuffer);
+      done()
+    });
+    resourceBuffer = 'some new resource data\n';
+    watcher.update();
   });
 });
