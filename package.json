@@ -17,5 +17,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/platy/offline-http-sync.git"
+  },
+  "dependencies": {
+    "request": "^2.63.0"
   }
 }

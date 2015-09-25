@@ -1,7 +1,7 @@
 const util = require('util');
-var EventEmitter = require("events").EventEmitter;
-var http = require('http');
-var fs = require('fs');
+const EventEmitter = require("events").EventEmitter;
+const request = require('request');
+const fs = require('fs');
 
 function HttpWatcher() {
   EventEmitter.call(this);
@@ -19,22 +19,27 @@ util.inherits(HttpWatcher, EventEmitter);
 
 /**
  *
- * @param srcUrl
+ * @param {string|object} srcOptions takes either a uri or the options that require() takes
  * @param destPath
  * @param {syncCallback} callback
  */
-exports.sync = function(srcUrl, destPath, callback) {
+exports.sync = function(srcOptions, destPath, callback) {
   var watcher = new HttpWatcher();
-  downloadFile(srcUrl, destPath, function() {
-    watcher.emit('ready')
+  const tempCachePath = destPath + '.temp';
+  downloadFile(srcOptions, tempCachePath, function() {
+    fs.rename(tempCachePath, destPath, function(err) {
+      if (err)
+        watcher.emit('error', err);
+      else
+        watcher.emit('ready');
+    });
   }, function(err) {
     httpFailed(destPath, err, watcher);
   }, function(error) {
     watcher.emit('error', error)
   });
   watcher.update = function() {
-    const tempCachePath = destPath + '.temp';
-    downloadFile(srcUrl, tempCachePath, function() {
+    downloadFile(srcOptions, tempCachePath, function() {
       fs.rename(tempCachePath, destPath, function(err) {
         if (err)
           watcher.emit('error', err);
@@ -55,17 +60,26 @@ exports.sync = function(srcUrl, destPath, callback) {
   return watcher;
 };
 
-function downloadFile(srcUrl, destPath, cbDone, cbDownloadFail, cbFileFailed) {
-  http.get(srcUrl, function(response) {
-    if(response.statusCode >= 400)
-      return cbDownloadFail(new Error('HTTP response indicated failure to get resource: ' + response.statusCode));
-    var file = fs.createWriteStream(destPath);
-    file.on('open', function() {
-      response.pipe(file);
-      response.on('end', cbDone);
-    });
-    file.on('error', cbFileFailed);
-  }).on('error', cbDownloadFail);
+function downloadFile(srcOptions, destPath, cbDone, cbDownloadFail, cbFileFailed) {
+  var file = fs.createWriteStream(destPath);
+  function downloadFailed(err) {
+    file.close();
+    fs.unlink(destPath);
+    return cbDownloadFail(err);
+  }
+  file.on('open', function () {
+    const req = request.get(srcOptions);
+    req.on('error', downloadFailed)
+        .on('response', function (response) {
+          if (response.statusCode >= 400) {
+            req.removeAllListeners();
+            return downloadFailed(new Error('HTTP response indicated failure to get resource: ' + response.statusCode));
+          }
+        })
+        .on('end', cbDone)
+        .pipe(file);
+  });
+  file.on('error', cbFileFailed);
 }
 
 function httpFailed(destPath, downloadError, watcher) {
