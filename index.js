@@ -64,7 +64,10 @@ function downloadFile(srcOptions, destPath, cbDone, cbDownloadFail, cbFileFailed
   var file = fs.createWriteStream(destPath);
   function downloadFailed(err) {
     file.close();
-    fs.unlink(destPath);
+    fs.unlink(destPath, function(err) {
+      if (err)
+        cbFileFailed(err);
+    });
     return cbDownloadFail(err);
   }
   file.on('open', function () {
