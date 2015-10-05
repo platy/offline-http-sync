@@ -79,8 +79,8 @@ function downloadFile(srcOptions, destPath, cbDone, cbDownloadFail, cbFileFailed
             return downloadFailed(new Error('HTTP response indicated failure to get resource: ' + response.statusCode));
           }
         })
-        .on('end', cbDone)
-        .pipe(file);
+        .pipe(file)
+        .on('finish', cbDone);
   });
   file.on('error', cbFileFailed);
 }
